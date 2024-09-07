@@ -1,0 +1,41 @@
+package net.sedixed.pochy.event;
+
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.sedixed.pochy.PochyMod;
+import net.sedixed.pochy.config.Config;
+import net.sedixed.pochy.entity.custom.PochyEntity;
+
+import static net.sedixed.pochy.entity.ModEntities.POCHY;
+
+
+public class ModEvents {
+    @Mod.EventBusSubscriber(modid = PochyMod.MOD_ID)
+    public static class ForgeEvents {
+        @SubscribeEvent
+        public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
+            boolean hasChanged = Config.addPlayerName(event.getEntity().getName().getString());
+            if (hasChanged) {
+                Player player = event.getEntity();
+                Level level = player.level();
+
+                // Compute spawn position
+                double x = player.getX() + 2 * 0.05;
+                double y = player.getY() + 1; // player height
+                double z = player.getZ();
+
+                PochyEntity pochy = new PochyEntity(POCHY.get(), level);
+
+                pochy.moveTo(x, y, z);
+                pochy.setOwnerUUID(player.getUUID());
+                pochy.setCustomName(Component.literal("Pochy"));
+                pochy.setCustomNameVisible(true);
+                level.addFreshEntity(pochy);
+            }
+        }
+    }
+}
