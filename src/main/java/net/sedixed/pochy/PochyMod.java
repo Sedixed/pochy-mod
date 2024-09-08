@@ -19,6 +19,7 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.sedixed.pochy.config.Config;
 import net.sedixed.pochy.entity.ModEntities;
 import net.sedixed.pochy.entity.client.PochyRenderer;
+import net.sedixed.pochy.sound.ModSounds;
 import org.slf4j.Logger;
 
 
@@ -33,6 +34,7 @@ public class PochyMod {
         modEventBus.addListener(this::commonSetup);
 
         ModEntities.register(modEventBus);
+        ModSounds.register(modEventBus);
 
         // Register ourselves for server and other game events we are interested in
         MinecraftForge.EVENT_BUS.register(this);

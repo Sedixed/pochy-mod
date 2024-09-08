@@ -7,7 +7,6 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.SimpleContainer;
@@ -20,17 +19,15 @@ import net.minecraft.world.entity.ai.goal.*;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.npc.InventoryCarrier;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.food.Foods;
 import net.minecraft.world.inventory.ChestMenu;
 import net.minecraft.world.inventory.MenuType;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.gameevent.GameEvent;
-import net.minecraft.world.phys.Vec3;
 import net.sedixed.pochy.entity.ai.PochyFloatGoal;
 import net.sedixed.pochy.entity.ai.PochyFollowOwnerGoal;
+import net.sedixed.pochy.sound.ModSounds;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -166,24 +163,23 @@ public class PochyEntity extends TamableAnimal implements InventoryCarrier {
     @Nullable
     @Override
     protected SoundEvent getAmbientSound() {
-        return SoundEvents.CAT_PURREOW;
+        return ModSounds.POCHY_IDLE.get();
     }
 
     @Nullable
     @Override
     protected SoundEvent getHurtSound(@NotNull DamageSource pDamageSource) {
-        return SoundEvents.CAT_HURT;
+        return ModSounds.POCHY_HURT.get();
     }
 
     @Nullable
     @Override
     protected SoundEvent getDeathSound() {
-        return SoundEvents.CAT_DEATH;
+        return ModSounds.POCHY_DEATH.get();
     }
 
     public @NotNull SimpleContainer getInventory() {
         return this.inventory;
-
     }
 
     @Override
@@ -211,7 +207,7 @@ public class PochyEntity extends TamableAnimal implements InventoryCarrier {
 
             player.openMenu(new SimpleMenuProvider(
                     (containerId, playerInventory, unusedPlayer) -> new ChestMenu(MenuType.GENERIC_9x3, containerId, playerInventory, inventory, 3),
-                    Component.literal("Pochy's inventory")
+                    Component.literal(getCustomName().getString() + "'s inventory")
             ));
             return InteractionResult.SUCCESS;
         } else {

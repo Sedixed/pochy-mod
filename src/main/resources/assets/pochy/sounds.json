@@ -1,0 +1,23 @@
+{
+  "pochy_idle": {
+    "subtitles": "sounds.pochy.pochy_idle",
+    "sounds": [
+      "pochy:pochy_idle1",
+      "pochy:pochy_idle2",
+      "pochy:pochy_idle3",
+      "pochy:pochy_idle4"
+    ]
+  },
+  "pochy_hurt": {
+    "subtitles": "sounds.pochy.pochy_hurt",
+    "sounds": [
+      "pochy:pochy_hurt"
+    ]
+  },
+  "pochy_death": {
+    "subtitles": "sounds.pochy.pochy_death",
+    "sounds": [
+      "pochy:pochy_death"
+    ]
+  }
+}
