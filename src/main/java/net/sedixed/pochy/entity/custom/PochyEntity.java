@@ -1,5 +1,6 @@
 package net.sedixed.pochy.entity.custom;
 
+import net.minecraft.Util;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -7,10 +8,7 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.SimpleContainer;
-import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.*;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -24,9 +22,11 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.sedixed.pochy.entity.ai.PochyFloatGoal;
 import net.sedixed.pochy.entity.ai.PochyFollowOwnerGoal;
+import net.sedixed.pochy.entity.variant.PochyVariant;
 import net.sedixed.pochy.sound.ModSounds;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -39,6 +39,9 @@ public class PochyEntity extends TamableAnimal implements InventoryCarrier {
 
     private static final EntityDataAccessor<Boolean> RUNNING =
             SynchedEntityData.defineId(PochyEntity.class, EntityDataSerializers.BOOLEAN);
+
+    private static final EntityDataAccessor<Integer> DATA_ID_TYPE_VARIANT =
+            SynchedEntityData.defineId(PochyEntity.class, EntityDataSerializers.INT);
 
     public PochyEntity(EntityType<? extends TamableAnimal> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
@@ -126,6 +129,7 @@ public class PochyEntity extends TamableAnimal implements InventoryCarrier {
         super.defineSynchedData();
         this.entityData.define(SWIMMING, false);
         this.entityData.define(RUNNING, false);
+        this.entityData.define(DATA_ID_TYPE_VARIANT, 0);
     }
 
     @Override
@@ -186,12 +190,14 @@ public class PochyEntity extends TamableAnimal implements InventoryCarrier {
     public void addAdditionalSaveData(@NotNull CompoundTag pCompound) {
         writeInventoryToTag(pCompound);
         super.addAdditionalSaveData(pCompound);
+        pCompound.putInt("Variant", this.getTypeVariant());
     }
 
     @Override
     public void readAdditionalSaveData(@NotNull CompoundTag pCompound) {
         readInventoryFromTag(pCompound);
         super.readAdditionalSaveData(pCompound);
+        this.entityData.set(DATA_ID_TYPE_VARIANT, pCompound.getInt("Variant"));
     }
 
     @Override
@@ -223,5 +229,28 @@ public class PochyEntity extends TamableAnimal implements InventoryCarrier {
 
             return super.mobInteract(player, pHand);
         }
+    }
+
+    /**
+     * Variants
+     */
+
+    @Override
+    public SpawnGroupData finalizeSpawn(ServerLevelAccessor pLevel, DifficultyInstance pDifficulty, MobSpawnType pReason, @Nullable SpawnGroupData pSpawnData, @Nullable CompoundTag pDataTag) {
+        PochyVariant variant = Util.getRandom(PochyVariant.values(), this.random);
+        setVariant(variant);
+        return super.finalizeSpawn(pLevel, pDifficulty, pReason, pSpawnData, pDataTag);
+    }
+
+    public PochyVariant getVariant() {
+        return PochyVariant.byId(this.getTypeVariant() & 255);
+    }
+
+    private void setVariant(PochyVariant variant) {
+        this.entityData.set(DATA_ID_TYPE_VARIANT, variant.getId() & 255);
+    }
+
+    private int getTypeVariant() {
+        return this.entityData.get(DATA_ID_TYPE_VARIANT);
     }
 }
