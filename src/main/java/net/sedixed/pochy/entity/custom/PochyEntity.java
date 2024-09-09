@@ -32,8 +32,26 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class PochyEntity extends TamableAnimal implements InventoryCarrier {
+    /**
+     * Pochy's inventory.
+     */
     private final SimpleContainer inventory = new SimpleContainer(27);
 
+    /**
+     * Animation states.
+     */
+    public final AnimationState idleAnimationState = new AnimationState();
+    private int idleAnimationTimeout = 0;
+
+    public final AnimationState swimAnimationState = new AnimationState();
+    private int swimAnimationTimeout = 0;
+
+    public final AnimationState runAnimationState = new AnimationState();
+    private int runAnimationTimeout = 0;
+
+    /**
+     * Synced data.
+     */
     private static final EntityDataAccessor<Boolean> SWIMMING =
             SynchedEntityData.defineId(PochyEntity.class, EntityDataSerializers.BOOLEAN);
 
@@ -47,15 +65,33 @@ public class PochyEntity extends TamableAnimal implements InventoryCarrier {
         super(pEntityType, pLevel);
     }
 
-    public final AnimationState idleAnimationState = new AnimationState();
-    private int idleAnimationTimeout = 0;
+    @Override
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        this.entityData.define(SWIMMING, false);
+        this.entityData.define(RUNNING, false);
+        this.entityData.define(DATA_ID_TYPE_VARIANT, 0);
+    }
 
-    public final AnimationState swimAnimationState = new AnimationState();
-    private int swimAnimationTimeout = 0;
+    @Override
+    protected void registerGoals() {
+        this.goalSelector.addGoal(0, new PochyFloatGoal(this));
+        this.goalSelector.addGoal(0, new PochyFollowOwnerGoal(this, 1.65f, 5, 100, true));
+        this.goalSelector.addGoal(1, new LookAtPlayerGoal(this, Player.class, 10.0f));
+        this.goalSelector.addGoal(2, new RandomStrollGoal(this, 1.0f));
+        this.goalSelector.addGoal(3, new RandomLookAroundGoal(this));
+    }
 
-    public final AnimationState runAnimationState = new AnimationState();
-    private int runAnimationTimeout = 0;
+    public static AttributeSupplier.Builder createAttributes()  {
+        return Animal.createLivingAttributes()
+                .add(Attributes.MAX_HEALTH, 10)
+                .add(Attributes.MOVEMENT_SPEED, 0.25)
+                .add(Attributes.FOLLOW_RANGE, 100);
+    }
 
+    /**
+     * State/animation update.
+     */
     @Override
     public void tick() {
         super.tick();
@@ -65,8 +101,27 @@ public class PochyEntity extends TamableAnimal implements InventoryCarrier {
     }
 
     @Override
-    public boolean causeFallDamage(float pFallDistance, float pMultiplier, DamageSource pSource) {
-        return false;
+    protected void updateWalkAnimation(float pPartialTick) {
+        this.walkAnimation.update(
+                this.getPose() == Pose.STANDING ? Math.min(pPartialTick * 6f, 1f) : 0f,
+                0.2f
+        );
+    }
+
+    public void setSwimmingState(boolean swimming) {
+        this.entityData.set(SWIMMING, swimming);
+    }
+
+    public boolean isSwimming() {
+        return this.entityData.get(SWIMMING);
+    }
+
+    public void setRunning(boolean running) {
+        this.entityData.set(RUNNING, running);
+    }
+
+    public boolean isRunning() {
+        return this.entityData.get(RUNNING);
     }
 
     private void setupAnimationStates() {
@@ -101,51 +156,8 @@ public class PochyEntity extends TamableAnimal implements InventoryCarrier {
     }
 
     @Override
-    protected void updateWalkAnimation(float pPartialTick) {
-        this.walkAnimation.update(
-                this.getPose() == Pose.STANDING ? Math.min(pPartialTick * 6f, 1f) : 0f,
-                0.2f
-        );
-    }
-
-    public void setSwimmingState(boolean swimming) {
-        this.entityData.set(SWIMMING, swimming);
-    }
-
-    public boolean isSwimming() {
-        return this.entityData.get(SWIMMING);
-    }
-
-    public void setRunning(boolean running) {
-        this.entityData.set(RUNNING, running);
-    }
-
-    public boolean isRunning() {
-        return this.entityData.get(RUNNING);
-    }
-
-    @Override
-    protected void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(SWIMMING, false);
-        this.entityData.define(RUNNING, false);
-        this.entityData.define(DATA_ID_TYPE_VARIANT, 0);
-    }
-
-    @Override
-    protected void registerGoals() {
-        this.goalSelector.addGoal(0, new PochyFloatGoal(this));
-        this.goalSelector.addGoal(0, new PochyFollowOwnerGoal(this, 1.65f, 5, 100, true));
-        this.goalSelector.addGoal(1, new LookAtPlayerGoal(this, Player.class, 10.0f));
-        this.goalSelector.addGoal(2, new RandomStrollGoal(this, 1.0f));
-        this.goalSelector.addGoal(3, new RandomLookAroundGoal(this));
-    }
-
-    public static AttributeSupplier.Builder createAttributes()  {
-        return Animal.createLivingAttributes()
-                .add(Attributes.MAX_HEALTH, 10)
-                .add(Attributes.MOVEMENT_SPEED, 0.25)
-                .add(Attributes.FOLLOW_RANGE, 100);
+    public boolean causeFallDamage(float pFallDistance, float pMultiplier, DamageSource pSource) {
+        return false;
     }
 
     @Nullable
@@ -201,7 +213,7 @@ public class PochyEntity extends TamableAnimal implements InventoryCarrier {
     }
 
     @Override
-    public InteractionResult mobInteract(Player player, @NotNull InteractionHand pHand) {
+    public @NotNull InteractionResult mobInteract(Player player, @NotNull InteractionHand pHand) {
         ItemStack itemStack = player.getItemInHand(pHand);
 
         if (this.level().isClientSide) {

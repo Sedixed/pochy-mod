@@ -80,7 +80,6 @@ public class PochyModel<T extends Entity> extends HierarchicalModel<T> {
 		this.animate(((PochyEntity) entity).idleAnimationState, ModAnimationDefinitions.POCHY_IDLE, ageInTicks, 1f);
 		this.animate(((PochyEntity) entity).swimAnimationState, ModAnimationDefinitions.POCHY_SWIM, ageInTicks, 1f);
 		this.animate(((PochyEntity) entity).runAnimationState, ModAnimationDefinitions.POCHY_RUN, ageInTicks, 1f);
-
 	}
 
 	private void applyHeadRotation(float pNetHeadYaw, float pHeadPitch) {
