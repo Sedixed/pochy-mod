@@ -15,12 +15,46 @@ public class PochyFollowOwnerGoal extends FollowOwnerGoal {
     @Override
     public void start() {
         super.start();
-        entity.setRunning(true);
+        if (entityIsInFluid()) {
+            entity.setSwimmingState(true);
+        } else {
+            entity.setRunning(true);
+        }
     }
 
     @Override
     public void stop() {
         entity.setRunning(false);
         super.stop();
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        // Animation state update
+        if (entityIsInFluid()) {
+            if (!entity.isSwimming()) {
+                entity.setSwimmingState(true);
+            }
+            if (entity.isRunning()) {
+                entity.setRunning(false);
+            }
+
+        } else {
+            if (entity.isSwimming()) {
+                entity.setSwimmingState(false);
+            }
+            if (!entity.isRunning()) {
+                entity.setRunning(true);
+            }
+        }
+    }
+
+    private boolean entityIsInFluid() {
+        return this.entity.isInWater() ||
+                this.entity.isInLava() ||
+                this.entity.isInFluidType(
+                        (fluidType, height) -> this.entity.canSwimInFluidType(fluidType) &&
+                                height > this.entity.getFluidJumpThreshold());
     }
 }

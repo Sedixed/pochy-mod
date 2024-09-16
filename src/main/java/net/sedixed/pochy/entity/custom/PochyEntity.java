@@ -13,7 +13,9 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.goal.*;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.npc.InventoryCarrier;
 import net.minecraft.world.entity.player.Player;
@@ -24,6 +26,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraftforge.fluids.FluidType;
 import net.sedixed.pochy.entity.ai.PochyFloatGoal;
 import net.sedixed.pochy.entity.ai.PochyFollowOwnerGoal;
 import net.sedixed.pochy.entity.variant.PochyVariant;
@@ -68,18 +71,18 @@ public class PochyEntity extends TamableAnimal implements InventoryCarrier {
     @Override
     protected void defineSynchedData() {
         super.defineSynchedData();
-        this.entityData.define(SWIMMING, false);
-        this.entityData.define(RUNNING, false);
-        this.entityData.define(DATA_ID_TYPE_VARIANT, 0);
+        entityData.define(SWIMMING, false);
+        entityData.define(RUNNING, false);
+        entityData.define(DATA_ID_TYPE_VARIANT, 0);
     }
 
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(0, new PochyFloatGoal(this));
-        this.goalSelector.addGoal(0, new PochyFollowOwnerGoal(this, 1.65f, 5, 100, true));
-        this.goalSelector.addGoal(1, new LookAtPlayerGoal(this, Player.class, 10.0f));
-        this.goalSelector.addGoal(2, new RandomStrollGoal(this, 1.0f));
-        this.goalSelector.addGoal(3, new RandomLookAroundGoal(this));
+        goalSelector.addGoal(0, new PochyFloatGoal(this));
+        goalSelector.addGoal(0, new PochyFollowOwnerGoal(this, 1.65f, 8, 2, true));
+        goalSelector.addGoal(2, new LookAtPlayerGoal(this, Player.class, 10.0f));
+        goalSelector.addGoal(3, new WaterAvoidingRandomStrollGoal(this, 0.85f));
+        goalSelector.addGoal(4, new RandomLookAroundGoal(this));
     }
 
     public static AttributeSupplier.Builder createAttributes()  {
@@ -95,69 +98,82 @@ public class PochyEntity extends TamableAnimal implements InventoryCarrier {
     @Override
     public void tick() {
         super.tick();
-        if (this.level().isClientSide()) {
+        if (level().isClientSide()) {
             setupAnimationStates();
         }
     }
 
     @Override
     protected void updateWalkAnimation(float pPartialTick) {
-        this.walkAnimation.update(
-                this.getPose() == Pose.STANDING ? Math.min(pPartialTick * 6f, 1f) : 0f,
+        walkAnimation.update(
+                getPose() == Pose.STANDING ? Math.min(pPartialTick * 6f, 1f) : 0f,
                 0.2f
         );
     }
 
     public void setSwimmingState(boolean swimming) {
-        this.entityData.set(SWIMMING, swimming);
+        entityData.set(SWIMMING, swimming);
     }
 
     public boolean isSwimming() {
-        return this.entityData.get(SWIMMING);
+        return entityData.get(SWIMMING);
     }
 
     public void setRunning(boolean running) {
-        this.entityData.set(RUNNING, running);
+        entityData.set(RUNNING, running);
     }
 
     public boolean isRunning() {
-        return this.entityData.get(RUNNING);
+        return entityData.get(RUNNING);
     }
 
     private void setupAnimationStates() {
-        if (this.idleAnimationTimeout <= 0) {
-            this.idleAnimationTimeout = this.random.nextInt(40) + 80;
-            this.idleAnimationState.start(this.tickCount);
+        if (idleAnimationTimeout <= 0) {
+            idleAnimationTimeout = random.nextInt(40) + 80;
+            idleAnimationState.start(tickCount);
         } else {
-            --this.idleAnimationTimeout;
+            --idleAnimationTimeout;
         }
 
-        if (this.isSwimming()) {
-            if (this.swimAnimationTimeout <= 0) {
-                swimAnimationTimeout = this.random.nextInt(40) + 80;
-                swimAnimationState.start(this.tickCount);
+        if (isSwimming()) {
+            if (swimAnimationTimeout <= 0) {
+                swimAnimationTimeout = random.nextInt(40) + 80;
+                swimAnimationState.start(tickCount);
             } else {
                 --swimAnimationTimeout;
             }
         } else {
             swimAnimationState.stop();
+            swimAnimationTimeout = 0;
         }
 
-        if (this.isRunning()) {
-            if (this.runAnimationTimeout <= 0) {
-                runAnimationTimeout = this.random.nextInt(40) + 80;
-                runAnimationState.start(this.tickCount);
+        if (isRunning()) {
+            if (runAnimationTimeout <= 0) {
+                runAnimationTimeout = random.nextInt(40) + 80;
+                runAnimationState.start(tickCount);
             } else {
                 --runAnimationTimeout;
             }
         } else {
             runAnimationState.stop();
+            runAnimationTimeout = 0;
         }
     }
 
     @Override
     public boolean causeFallDamage(float pFallDistance, float pMultiplier, DamageSource pSource) {
         return false;
+    }
+
+
+    @Override
+    public boolean isPushedByFluid(FluidType type) {
+        return false;
+    }
+
+    @Override
+    protected float getWaterSlowDown() {
+        return 0.96f;
     }
 
     @Nullable
@@ -195,28 +211,28 @@ public class PochyEntity extends TamableAnimal implements InventoryCarrier {
     }
 
     public @NotNull SimpleContainer getInventory() {
-        return this.inventory;
+        return inventory;
     }
 
     @Override
     public void addAdditionalSaveData(@NotNull CompoundTag pCompound) {
         writeInventoryToTag(pCompound);
         super.addAdditionalSaveData(pCompound);
-        pCompound.putInt("Variant", this.getTypeVariant());
+        pCompound.putInt("Variant", getTypeVariant());
     }
 
     @Override
     public void readAdditionalSaveData(@NotNull CompoundTag pCompound) {
         readInventoryFromTag(pCompound);
         super.readAdditionalSaveData(pCompound);
-        this.entityData.set(DATA_ID_TYPE_VARIANT, pCompound.getInt("Variant"));
+        entityData.set(DATA_ID_TYPE_VARIANT, pCompound.getInt("Variant"));
     }
 
     @Override
     public @NotNull InteractionResult mobInteract(Player player, @NotNull InteractionHand pHand) {
         ItemStack itemStack = player.getItemInHand(pHand);
 
-        if (this.level().isClientSide) {
+        if (level().isClientSide) {
             return itemStack.is(Items.POTATO) ? InteractionResult.CONSUME : InteractionResult.PASS;
         }
 
@@ -230,12 +246,12 @@ public class PochyEntity extends TamableAnimal implements InventoryCarrier {
             return InteractionResult.SUCCESS;
         } else {
             // Feeding
-            if (isFood(itemStack) && this.getHealth() < this.getMaxHealth()) {
-                this.heal(2f);
+            if (isFood(itemStack) && getHealth() < getMaxHealth()) {
+                heal(2f);
                 if (!player.getAbilities().instabuild) {
                     itemStack.shrink(1);
                 }
-                this.gameEvent(GameEvent.EAT, this);
+                gameEvent(GameEvent.EAT, this);
                 return InteractionResult.SUCCESS;
             }
 
@@ -249,20 +265,20 @@ public class PochyEntity extends TamableAnimal implements InventoryCarrier {
 
     @Override
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor pLevel, DifficultyInstance pDifficulty, MobSpawnType pReason, @Nullable SpawnGroupData pSpawnData, @Nullable CompoundTag pDataTag) {
-        PochyVariant variant = Util.getRandom(PochyVariant.values(), this.random);
+        PochyVariant variant = Util.getRandom(PochyVariant.values(), random);
         setVariant(variant);
         return super.finalizeSpawn(pLevel, pDifficulty, pReason, pSpawnData, pDataTag);
     }
 
     public PochyVariant getVariant() {
-        return PochyVariant.byId(this.getTypeVariant() & 255);
+        return PochyVariant.byId(getTypeVariant() & 255);
     }
 
     private void setVariant(PochyVariant variant) {
-        this.entityData.set(DATA_ID_TYPE_VARIANT, variant.getId() & 255);
+        entityData.set(DATA_ID_TYPE_VARIANT, variant.getId() & 255);
     }
 
     private int getTypeVariant() {
-        return this.entityData.get(DATA_ID_TYPE_VARIANT);
+        return entityData.get(DATA_ID_TYPE_VARIANT);
     }
 }

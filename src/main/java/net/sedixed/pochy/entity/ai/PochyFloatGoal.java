@@ -15,13 +15,17 @@ public class PochyFloatGoal extends FloatGoal {
 
     @Override
     public void start() {
-        super.start();
         entity.setSwimmingState(true);
+        super.start();
     }
 
     @Override
     public boolean canUse() {
-        return this.entity.isInWater() || this.entity.isInLava() || this.entity.isInFluidType((fluidType, height) -> this.entity.canSwimInFluidType(fluidType) && height > this.entity.getFluidJumpThreshold());
+        return this.entity.isInWater()
+                || this.entity.isInLava()
+                || this.entity.isInFluidType(
+                        (fluidType, height) -> this.entity.canSwimInFluidType(fluidType)
+                                && height > this.entity.getFluidJumpThreshold());
     }
 
     @Override
@@ -32,7 +36,9 @@ public class PochyFloatGoal extends FloatGoal {
 
     @Override
     public void tick() {
-        if (this.entity.getRandom().nextFloat() < 0.8F && this.entity.getFluidHeight(FluidTags.WATER) > this.entity.getFluidJumpThreshold()) {
+        if (this.entity.getRandom().nextFloat() < 0.8F
+                && this.entity.getFluidHeight(FluidTags.WATER) > this.entity.getFluidJumpThreshold()
+        ) {
             this.entity.getJumpControl().jump();
         }
     }
