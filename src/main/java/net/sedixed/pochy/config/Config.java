@@ -54,7 +54,7 @@ public class Config {
     }
 
     /**
-     * Validation of a player name (must be a non-empty string)
+     * Validation of a player name (must be a non-empty string).
      * @param obj String to insert.
      * @return true if the predicate is valid.
      */

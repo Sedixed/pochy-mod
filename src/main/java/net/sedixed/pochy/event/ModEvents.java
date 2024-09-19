@@ -18,14 +18,13 @@ public class ModEvents {
     public static class ForgeEvents {
         @SubscribeEvent
         public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
-            boolean hasChanged = Config.addPlayerName(event.getEntity().getName().getString());
-            if (hasChanged) {
+            boolean isNewPlayer = Config.addPlayerName(event.getEntity().getName().getString());
+            if (isNewPlayer) {
                 Player player = event.getEntity();
                 Level level = player.level();
 
-                // Compute spawn position
-                double x = player.getX() + 2 * 0.05;
-                double y = player.getY() + 1; // player height
+                double x = player.getX() + 0.1;
+                double y = player.getY() + 1;
                 double z = player.getZ();
 
                 PochyEntity pochy = new PochyEntity(POCHY.get(), level);
