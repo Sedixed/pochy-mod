@@ -5,7 +5,8 @@ import java.util.Comparator;
 
 public enum PochyVariant {
     BROWN(0),
-    BLACK(1);
+    BLACK(1),
+    GREY(2);
 
     private static final PochyVariant[] BY_ID = Arrays.stream(values())
             .sorted(Comparator.comparingInt(PochyVariant::getId))

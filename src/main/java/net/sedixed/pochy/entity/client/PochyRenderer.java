@@ -24,6 +24,10 @@ public class PochyRenderer extends MobRenderer<PochyEntity, PochyModel<PochyEnti
                         PochyVariant.BLACK,
                         new ResourceLocation(PochyMod.MOD_ID, "textures/entity/black_pochy.png")
                 );
+                map.put(
+                        PochyVariant.GREY,
+                        new ResourceLocation(PochyMod.MOD_ID, "textures/entity/grey_pochy.png")
+                );
             });
 
     public PochyRenderer(EntityRendererProvider.Context pContext) {
