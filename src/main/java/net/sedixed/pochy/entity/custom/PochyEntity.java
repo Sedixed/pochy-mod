@@ -17,6 +17,7 @@ import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.npc.InventoryCarrier;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ChestMenu;
@@ -79,7 +80,7 @@ public class PochyEntity extends TamableAnimal implements InventoryCarrier {
     @Override
     protected void registerGoals() {
         goalSelector.addGoal(0, new PochyFloatGoal(this));
-        goalSelector.addGoal(0, new PochyFollowOwnerGoal(this, 1.65f, 8, 2, true));
+        goalSelector.addGoal(0, new PochyFollowOwnerGoal(this, 1.65f, 8, 4, true));
         goalSelector.addGoal(2, new LookAtPlayerGoal(this, Player.class, 10.0f));
         goalSelector.addGoal(3, new WaterAvoidingRandomStrollGoal(this, 0.85f));
         goalSelector.addGoal(4, new RandomLookAroundGoal(this));
@@ -238,10 +239,10 @@ public class PochyEntity extends TamableAnimal implements InventoryCarrier {
 
         // Inventory access
         if (pHand.equals(InteractionHand.OFF_HAND)) {
-
+            String name = getCustomName() == null ? "Pochy" : getCustomName().getString();
             player.openMenu(new SimpleMenuProvider(
                     (containerId, playerInventory, unusedPlayer) -> new ChestMenu(MenuType.GENERIC_9x3, containerId, playerInventory, inventory, 3),
-                    Component.literal(getCustomName().getString() + "'s inventory")
+                    Component.literal(name + "'s inventory")
             ));
             return InteractionResult.SUCCESS;
         } else {
@@ -257,6 +258,27 @@ public class PochyEntity extends TamableAnimal implements InventoryCarrier {
 
             return super.mobInteract(player, pHand);
         }
+    }
+
+    @Override
+    public void die(@NotNull DamageSource pCause) {
+        // Drop inventory upon death
+        ItemStack[] items = new ItemStack[inventory.getContainerSize()];
+        for (int i = 0; i < inventory.getContainerSize(); ++i) {
+            items[i] = inventory.getItem(i);
+        }
+
+        for (ItemStack item : items) {
+            if (!item.isEmpty()) {
+                level().addFreshEntity(new ItemEntity(level(), getX(), getY(), getZ(), item));
+            }
+        }
+
+        for (int i = 0; i < inventory.getContainerSize(); ++i) {
+            items[i] = inventory.getItem(i);
+            inventory.setItem(i, ItemStack.EMPTY);
+        }
+        super.die(pCause);
     }
 
     /**
