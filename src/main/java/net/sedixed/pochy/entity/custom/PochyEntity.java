@@ -17,10 +17,12 @@ import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.npc.InventoryCarrier;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ChestMenu;
 import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
@@ -238,10 +240,10 @@ public class PochyEntity extends TamableAnimal implements InventoryCarrier {
 
         // Inventory access
         if (pHand.equals(InteractionHand.OFF_HAND)) {
-
+            String name = getCustomName() == null ? "Pochy" : getCustomName().getString();
             player.openMenu(new SimpleMenuProvider(
                     (containerId, playerInventory, unusedPlayer) -> new ChestMenu(MenuType.GENERIC_9x3, containerId, playerInventory, inventory, 3),
-                    Component.literal(getCustomName().getString() + "'s inventory")
+                    Component.literal(name + "'s inventory")
             ));
             return InteractionResult.SUCCESS;
         } else {
@@ -280,5 +282,26 @@ public class PochyEntity extends TamableAnimal implements InventoryCarrier {
 
     private int getTypeVariant() {
         return entityData.get(DATA_ID_TYPE_VARIANT);
+    }
+
+    @Override
+    public void die(@NotNull DamageSource pCause) {
+        // Drop inventory upon death
+        ItemStack[] items = new ItemStack[inventory.getContainerSize()];
+        for (int i = 0; i < inventory.getContainerSize(); ++i) {
+            items[i] = inventory.getItem(i);
+        }
+
+        for (ItemStack item : items) {
+            if (!item.isEmpty()) {
+                level().addFreshEntity(new ItemEntity(level(), getX(), getY(), getZ(), item));
+            }
+        }
+
+        for (int i = 0; i < inventory.getContainerSize(); ++i) {
+            items[i] = inventory.getItem(i);
+            inventory.setItem(i, ItemStack.EMPTY);
+        }
+        super.die(pCause);
     }
 }
