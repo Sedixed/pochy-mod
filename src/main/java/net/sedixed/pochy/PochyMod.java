@@ -16,7 +16,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
-import net.sedixed.pochy.config.Config;
+import net.sedixed.pochy.config.ServerConfig;
 import net.sedixed.pochy.entity.ModEntities;
 import net.sedixed.pochy.entity.client.PochyRenderer;
 import net.sedixed.pochy.sound.ModSounds;
@@ -36,11 +36,9 @@ public class PochyMod {
         ModEntities.register(modEventBus);
         ModSounds.register(modEventBus);
 
-        // Register ourselves for server and other game events we are interested in
         MinecraftForge.EVENT_BUS.register(this);
 
-        // Register our mod's ForgeConfigSpec so that Forge can create and load the config file for us
-        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, Config.SPEC);
+        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, ServerConfig.SPEC);
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {

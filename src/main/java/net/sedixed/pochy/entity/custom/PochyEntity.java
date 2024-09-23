@@ -65,6 +65,9 @@ public class PochyEntity extends TamableAnimal implements InventoryCarrier {
     private static final EntityDataAccessor<Integer> DATA_ID_TYPE_VARIANT =
             SynchedEntityData.defineId(PochyEntity.class, EntityDataSerializers.INT);
 
+    private static final EntityDataAccessor<Integer> TICKS_LEFT_BEFORE_DEATH =
+            SynchedEntityData.defineId(PochyEntity.class, EntityDataSerializers.INT);
+
     public PochyEntity(EntityType<? extends TamableAnimal> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
     }
@@ -75,6 +78,7 @@ public class PochyEntity extends TamableAnimal implements InventoryCarrier {
         entityData.define(SWIMMING, false);
         entityData.define(RUNNING, false);
         entityData.define(DATA_ID_TYPE_VARIANT, 0);
+        entityData.define(TICKS_LEFT_BEFORE_DEATH, random.nextInt(24000, 72000)); // 24000 ticks = 1d
     }
 
     @Override
@@ -102,6 +106,7 @@ public class PochyEntity extends TamableAnimal implements InventoryCarrier {
         if (level().isClientSide()) {
             setupAnimationStates();
         }
+        handleDeathTicks();
     }
 
     @Override
@@ -122,6 +127,14 @@ public class PochyEntity extends TamableAnimal implements InventoryCarrier {
 
     public void setRunning(boolean running) {
         entityData.set(RUNNING, running);
+    }
+
+    public int getTicksLeftBeforeDeath() {
+        return entityData.get(TICKS_LEFT_BEFORE_DEATH);
+    }
+
+    public void decreaseTicksLeftBeforeDeath() {
+        entityData.set(TICKS_LEFT_BEFORE_DEATH, getTicksLeftBeforeDeath() - 1);
     }
 
     public boolean isRunning() {
@@ -166,7 +179,6 @@ public class PochyEntity extends TamableAnimal implements InventoryCarrier {
         return false;
     }
 
-
     @Override
     public boolean isPushedByFluid(FluidType type) {
         return false;
@@ -186,11 +198,6 @@ public class PochyEntity extends TamableAnimal implements InventoryCarrier {
     @Override
     public boolean isFood(ItemStack stack) {
         return stack.is(Items.POTATO);
-    }
-
-    @Override
-    protected void dropAllDeathLoot(@NotNull DamageSource pDamageSource) {
-        super.dropAllDeathLoot(pDamageSource);
     }
 
     @Nullable
@@ -220,6 +227,7 @@ public class PochyEntity extends TamableAnimal implements InventoryCarrier {
         writeInventoryToTag(pCompound);
         super.addAdditionalSaveData(pCompound);
         pCompound.putInt("Variant", getTypeVariant());
+        pCompound.putInt("TicksLeft", getTicksLeftBeforeDeath());
     }
 
     @Override
@@ -227,6 +235,7 @@ public class PochyEntity extends TamableAnimal implements InventoryCarrier {
         readInventoryFromTag(pCompound);
         super.readAdditionalSaveData(pCompound);
         entityData.set(DATA_ID_TYPE_VARIANT, pCompound.getInt("Variant"));
+        entityData.set(TICKS_LEFT_BEFORE_DEATH, pCompound.getInt("TicksLeft"));
     }
 
     @Override
@@ -279,6 +288,15 @@ public class PochyEntity extends TamableAnimal implements InventoryCarrier {
             inventory.setItem(i, ItemStack.EMPTY);
         }
         super.die(pCause);
+    }
+
+    public void handleDeathTicks() {
+        int ticksLeft = getTicksLeftBeforeDeath();
+        if (ticksLeft == 0) {
+            // TODO death
+        } else {
+            decreaseTicksLeftBeforeDeath();
+        }
     }
 
     /**

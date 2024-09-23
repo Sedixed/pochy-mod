@@ -7,7 +7,7 @@ import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.sedixed.pochy.PochyMod;
-import net.sedixed.pochy.config.Config;
+import net.sedixed.pochy.config.ServerConfig;
 import net.sedixed.pochy.entity.custom.PochyEntity;
 
 import static net.sedixed.pochy.entity.ModEntities.POCHY;
@@ -18,7 +18,7 @@ public class ModEvents {
     public static class ForgeEvents {
         @SubscribeEvent
         public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
-            boolean isNewPlayer = Config.addPlayerName(event.getEntity().getName().getString());
+            boolean isNewPlayer = ServerConfig.addPlayerName(event.getEntity().getName().getString());
             if (isNewPlayer) {
                 Player player = event.getEntity();
                 Level level = player.level();

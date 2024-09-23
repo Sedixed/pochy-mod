@@ -1,6 +1,5 @@
 package net.sedixed.pochy.config;
 
-import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -11,12 +10,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Mod.EventBusSubscriber(modid = PochyMod.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
-public class Config {
+public class ServerConfig {
     private static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
 
     private static final ForgeConfigSpec.ConfigValue<List<? extends String>> REGISTERED_PLAYERS = BUILDER
             .comment("Registered players.")
-            .defineListAllowEmpty("players", List.of(), Config::validatePlayerName);
+            .defineListAllowEmpty("players", List.of(), ServerConfig::validatePlayerName);
 
     public static final ForgeConfigSpec SPEC = BUILDER.build();
 
